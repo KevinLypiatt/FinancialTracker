@@ -1,10 +1,19 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import time
 from utils import get_delta_color, format_percentage
 from market_data import MarketDataFetcher
 import plotly.graph_objects as go
+from supabase import create_client
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Initialize Supabase client
+supabase = create_client(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_KEY'))
 
 # Page config
 st.set_page_config(
@@ -31,18 +40,26 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Initialize session state
-if 'previous_data' not in st.session_state:
-    st.session_state.previous_data = None
-if 'last_update' not in st.session_state:
-    st.session_state.last_update = None
+def get_historical_data():
+    """Fetch the last two days of data from Supabase"""
+    try:
+        response = supabase.table('financial_data').select('*').order('timestamp', desc=True).limit(2).execute()
+        if response.data:
+            return pd.DataFrame(response.data)
+        return None
+    except Exception as e:
+        st.error(f"Error fetching historical data: {str(e)}")
+        return None
 
 def calculate_change(current, previous, field):
-    if not previous or field not in previous:
+    """Calculate percentage change between current and previous values"""
+    if previous is None or current is None:
+        return 0.0
+    if field not in previous or field not in current:
         return 0.0
     prev_value = previous[field]
     curr_value = current[field]
-    if prev_value and curr_value:
+    if prev_value and curr_value and prev_value != 0:
         return ((curr_value - prev_value) / prev_value) * 100
     return 0.0
 
@@ -54,7 +71,7 @@ def create_yield_curve_chart(data):
         data['us_10y_yield'],
         data['us_30y_yield']
     ]
-    
+
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=maturities,
@@ -64,7 +81,7 @@ def create_yield_curve_chart(data):
         line=dict(color='#1f77b4', width=2),
         marker=dict(size=8)
     ))
-    
+
     fig.update_layout(
         title='US Treasury Yield Curve',
         xaxis_title='Maturity (Years)',
@@ -74,27 +91,26 @@ def create_yield_curve_chart(data):
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)'
     )
-    
+
     return fig
 
 def main():
     st.title("📈 Financial Markets Dashboard")
-    
+
+    # Get historical data
+    hist_data = get_historical_data()
+
     # Initialize market data fetcher
     market_fetcher = MarketDataFetcher()
-    
+
     # Get current data
     current_data = market_fetcher.get_market_data()
-    
-    # Update session state
-    if current_data:
-        st.session_state.previous_data = st.session_state.get('current_data')
-        st.session_state.current_data = current_data
-        st.session_state.last_update = datetime.now(timezone.utc)
+
+    # Get previous day's data
+    previous_data = hist_data.iloc[1].to_dict() if hist_data is not None and len(hist_data) > 1 else None
 
     # Display last update time
-    if st.session_state.last_update:
-        st.caption(f"Last updated: {st.session_state.last_update.strftime('%Y-%m-%d %H:%M:%S')} UTC")
+    st.caption(f"Last updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC")
 
     # Create three columns for the main indicators
     col1, col2, col3 = st.columns(3)
@@ -105,8 +121,8 @@ def main():
         st.metric(
             "Gold (USD)",
             f"${current_data['gold_usd']:,.2f}",
-            format_percentage(calculate_change(current_data, st.session_state.previous_data, 'gold_usd')),
-            delta_color=get_delta_color(calculate_change(current_data, st.session_state.previous_data, 'gold_usd'))
+            format_percentage(calculate_change(current_data, previous_data, 'gold_usd')),
+            delta_color=get_delta_color(calculate_change(current_data, previous_data, 'gold_usd'))
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -116,8 +132,8 @@ def main():
         st.metric(
             "Gold (GBP)",
             f"£{current_data['gold_gbp']:,.2f}",
-            format_percentage(calculate_change(current_data, st.session_state.previous_data, 'gold_gbp')),
-            delta_color=get_delta_color(calculate_change(current_data, st.session_state.previous_data, 'gold_gbp'))
+            format_percentage(calculate_change(current_data, previous_data, 'gold_gbp')),
+            delta_color=get_delta_color(calculate_change(current_data, previous_data, 'gold_gbp'))
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -127,8 +143,8 @@ def main():
         st.metric(
             "GBP/USD",
             f"{current_data['gbp_usd']:.4f}",
-            format_percentage(calculate_change(current_data, st.session_state.previous_data, 'gbp_usd')),
-            delta_color=get_delta_color(calculate_change(current_data, st.session_state.previous_data, 'gbp_usd'))
+            format_percentage(calculate_change(current_data, previous_data, 'gbp_usd')),
+            delta_color=get_delta_color(calculate_change(current_data, previous_data, 'gbp_usd'))
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -141,8 +157,8 @@ def main():
         st.metric(
             "S&P 500",
             f"{current_data['sp500']:,.2f}",
-            format_percentage(calculate_change(current_data, st.session_state.previous_data, 'sp500')),
-            delta_color=get_delta_color(calculate_change(current_data, st.session_state.previous_data, 'sp500'))
+            format_percentage(calculate_change(current_data, previous_data, 'sp500')),
+            delta_color=get_delta_color(calculate_change(current_data, previous_data, 'sp500'))
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -152,21 +168,21 @@ def main():
         st.metric(
             "Bitcoin (USD)",
             f"${current_data['bitcoin']:,.2f}",
-            format_percentage(calculate_change(current_data, st.session_state.previous_data, 'bitcoin')),
-            delta_color=get_delta_color(calculate_change(current_data, st.session_state.previous_data, 'bitcoin'))
+            format_percentage(calculate_change(current_data, previous_data, 'bitcoin')),
+            delta_color=get_delta_color(calculate_change(current_data, previous_data, 'bitcoin'))
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
     # Yield Curve Section
     st.subheader("US Treasury Yield Curve")
-    
+
     # Display yield curve chart
     yield_curve_fig = create_yield_curve_chart(current_data)
     st.plotly_chart(yield_curve_fig, use_container_width=True)
 
     # Individual yield metrics
     yield_cols = st.columns(4)
-    
+
     yields = [
         ("2Y Yield", 'us_2y_yield'),
         ("5Y Yield", 'us_5y_yield'),
@@ -180,14 +196,14 @@ def main():
             st.metric(
                 label,
                 f"{current_data[key]:.2f}%",
-                format_percentage(calculate_change(current_data, st.session_state.previous_data, key)),
-                delta_color=get_delta_color(calculate_change(current_data, st.session_state.previous_data, key))
+                format_percentage(calculate_change(current_data, previous_data, key)),
+                delta_color=get_delta_color(calculate_change(current_data, previous_data, key))
             )
             st.markdown("</div>", unsafe_allow_html=True)
 
-    # Auto-refresh
+    # Refresh every minute
     time.sleep(60)
-    st.experimental_rerun()
+    st.rerun()
 
 if __name__ == "__main__":
     main()
