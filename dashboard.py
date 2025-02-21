@@ -8,12 +8,16 @@ import plotly.graph_objects as go
 from supabase import create_client
 import os
 from dotenv import load_dotenv
+from notification_manager import NotificationManager
 
 # Load environment variables
 load_dotenv()
 
 # Initialize Supabase client
 supabase = create_client(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_KEY'))
+
+# Initialize NotificationManager
+notification_manager = NotificationManager()
 
 # Page config
 st.set_page_config(
@@ -108,6 +112,10 @@ def main():
 
     # Get previous day's data
     previous_data = hist_data.iloc[1].to_dict() if hist_data is not None and len(hist_data) > 1 else None
+
+    # Check for significant changes and send notifications
+    if previous_data:
+        notification_manager.check_and_notify(current_data, previous_data)
 
     # Display last update time
     st.caption(f"Last updated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC")
