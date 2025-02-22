@@ -1,10 +1,12 @@
 import logging
 from typing import Dict, Any, Optional
 import yfinance as yf
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import time
 from threading import Lock
 from dataclasses import dataclass
+from fredapi import Fred
+import os
 
 @dataclass
 class RateLimiter:
@@ -24,6 +26,8 @@ class MarketDataFetcher:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.rate_limiter = RateLimiter(calls_per_second=2)
+        # Initialize FRED API client
+        self.fred = Fred(api_key=os.environ.get('FRED_API_KEY'))
 
     def get_forex_rate(self, symbol: str = "GBPUSD=X") -> Optional[float]:
         return self.get_stock_data(symbol)
@@ -70,25 +74,46 @@ class MarketDataFetcher:
             return {"uk_base_rate": None, "uk_inflation": None}
 
     def get_us_rates(self) -> Dict[str, Optional[float]]:
-        """Get US federal funds rate and inflation rate using Yahoo Finance"""
+        """Get US federal funds rate and inflation rate using FRED API"""
         try:
-            # Use Yahoo Finance symbols for US rates
-            us_base = self.get_stock_data("^IRX")  # US 13-week Treasury Bill rate
-            us_tips = self.get_stock_data("^TNX")  # US 10Y Treasury yield as inflation indicator
+            # Get latest Federal Funds Rate
+            fed_rate = self.fred.get_series('FEDFUNDS', 
+                                          observation_start=datetime.now() - timedelta(days=30))
+            latest_rate = float(fed_rate.iloc[-1])
 
-            # Convert basis points to percentage only if us_base is not None
-            if us_base is not None:
-                us_base = us_base / 100
+            # Get CPI data for last 13 months to calculate YoY inflation
+            cpi = self.fred.get_series('CPIAUCSL', 
+                                     observation_start=datetime.now() - timedelta(days=400))
+            latest_cpi = float(cpi.iloc[-1])
+            year_ago_cpi = float(cpi.iloc[-13])  # 13 months ago
+            inflation_rate = ((latest_cpi - year_ago_cpi) / year_ago_cpi) * 100
 
             rates = {
-                "us_base_rate": us_base,
-                "us_inflation": us_tips
+                "us_base_rate": latest_rate,
+                "us_inflation": inflation_rate
             }
-            self.logger.info(f"US rates: {rates}")
+            self.logger.info(f"US rates from FRED: {rates}")
             return rates
         except Exception as e:
-            self.logger.error(f"Error fetching US rates: {str(e)}")
-            return {"us_base_rate": None, "us_inflation": None}
+            self.logger.error(f"Error fetching US rates from FRED: {str(e)}")
+            # Fallback to Yahoo Finance data if FRED fails
+            try:
+                us_base = self.get_stock_data("^IRX")  # US 13-week Treasury Bill rate
+                us_tips = self.get_stock_data("^TNX")  # US 10Y Treasury yield as inflation indicator
+
+                # Convert basis points to percentage only if us_base is not None
+                if us_base is not None:
+                    us_base = us_base / 100
+
+                rates = {
+                    "us_base_rate": us_base,
+                    "us_inflation": us_tips
+                }
+                self.logger.info(f"US rates from Yahoo Finance (fallback): {rates}")
+                return rates
+            except Exception as fallback_error:
+                self.logger.error(f"Error fetching US rates fallback: {str(fallback_error)}")
+                return {"us_base_rate": None, "us_inflation": None}
 
     def get_market_data(self) -> Dict[str, Any]:
         try:
@@ -115,7 +140,7 @@ class MarketDataFetcher:
             else:
                 data["gold_gbp"] = None
 
-            self.logger.info(f"Complete market data: {data}")  # Add logging to debug
+            self.logger.info(f"Complete market data: {data}")
             return data
         except Exception as e:
             self.logger.error(f"Error fetching market data: {str(e)}")
