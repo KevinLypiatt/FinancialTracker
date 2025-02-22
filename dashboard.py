@@ -5,19 +5,51 @@ import time
 from utils import get_delta_color, format_percentage
 from market_data import MarketDataFetcher
 import plotly.graph_objects as go
-from supabase import create_client
+from supabase import create_client, Client
+from typing import Optional
 import os
 from dotenv import load_dotenv
 from notification_manager import NotificationManager
+import logging
+import pathlib
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
-load_dotenv()
-
-# Initialize Supabase client
-supabase = create_client(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_KEY'))
+env_path = pathlib.Path(__file__).parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # Initialize NotificationManager
 notification_manager = NotificationManager()
+logger.info("NotificationManager initialized")
+
+# Initialize Supabase client
+def init_supabase() -> Optional[Client]:
+    """Initialize Supabase client with proper error handling"""
+    try:
+        logger.info("Attempting to connect to Supabase...")
+        supabase_url = os.getenv('SUPABASE_URL')
+        supabase_key = os.getenv('SUPABASE_KEY')
+
+        if not supabase_url or not supabase_key:
+            logger.error("Supabase credentials not found in environment")
+            st.error("Database connection failed: Missing credentials")
+            return None
+
+        client = create_client(supabase_url, supabase_key)
+        logger.info("Successfully initialized Supabase client")
+        return client
+    except Exception as e:
+        logger.error(f"Failed to initialize Supabase client: {str(e)}")
+        st.error(f"Database connection failed: {str(e)}")
+        return None
+
+supabase = init_supabase()
 
 # Page config
 st.set_page_config(
@@ -59,12 +91,21 @@ st.markdown("""
 def get_historical_data():
     """Fetch the last two days of data from Supabase"""
     try:
+        if not supabase:
+            logger.error("Cannot fetch historical data: Supabase client not initialized")
+            return None
+
+        logger.info("Fetching historical data from Supabase...")
         response = supabase.table('financial_data').select('*').order('timestamp', desc=True).limit(2).execute()
+
         if response.data:
+            logger.info(f"Successfully fetched {len(response.data)} records")
             return pd.DataFrame(response.data)
+        logger.warning("No historical data found")
         return None
     except Exception as e:
-        st.error(f"Error fetching historical data: {str(e)}")
+        logger.error(f"Error fetching historical data: {str(e)}")
+        st.error(f"Failed to fetch market data: {str(e)}")
         return None
 
 def calculate_change(current, previous, field):
