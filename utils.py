@@ -19,4 +19,6 @@ def format_percentage(value):
     """
     if abs(value) < 0.0001:  # Handle floating point comparison
         return "0.00%"
-    return f"{'+' if value > 0 else ''}{value:.2f}%"
+    if value < 0:
+        return f"{value:.2f}%"
+    return f"+{value:.2f}%"
