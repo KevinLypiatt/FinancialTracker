@@ -6,16 +6,17 @@ def get_delta_color(change):
     - "inverse" for negative changes (red)
     - "off" for no change (gray)
     """
-    if change > 0:
+    if abs(change) < 0.0001:  # Handle floating point comparison
+        return "off"  # Gray
+    elif change > 0:
         return "normal"  # Green
-    elif change < 0:
+    else:
         return "inverse"  # Red
-    return "off"  # Gray for zero
 
 def format_percentage(value):
     """
     Formats the percentage change with appropriate sign and decimal places.
     """
-    if value == 0:
-        return None
+    if abs(value) < 0.0001:  # Handle floating point comparison
+        return "0.00%"
     return f"{'+' if value > 0 else ''}{value:.2f}%"
