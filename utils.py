@@ -1,3 +1,4 @@
+
 def get_delta_color(change):
     """
     Determines the color for the delta indicator based on the change value.
@@ -10,8 +11,7 @@ def get_delta_color(change):
         return "off"  # Gray
     elif change > 0:
         return "normal"  # Green
-    else:
-        return "inverse"  # Red
+    return "inverse"  # Red for negative
 
 def format_percentage(value):
     """
@@ -19,6 +19,6 @@ def format_percentage(value):
     """
     if abs(value) < 0.0001:  # Handle floating point comparison
         return "0.00%"
-    if value < 0:
-        return f"{value:.2f}%"
-    return f"+{value:.2f}%"
+    if value > 0:
+        return f"+{value:.2f}%"
+    return f"{value:.2f}%"  # Negative sign is already included
