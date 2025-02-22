@@ -48,11 +48,12 @@ class MarketDataFetcher:
             return None
 
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
-        """Get UK base rate and inflation rate"""
+        """Get UK base rate and inflation rate using proxies"""
         try:
-            # Using more accurate proxies for UK rates
-            uk_base = 4.5  # Current Bank of England base rate (fixed)
-            uk_inflation = 3.0  # Current UK CPI (fixed)
+            # Use UK 2Y Gilt yield as proxy for base rate (^GBVX)
+            # Use UK RPI as proxy for inflation (^UKRPI)
+            uk_base = self.get_stock_data("^GBVX")
+            uk_inflation = self.get_stock_data("^UKRPI")
 
             return {
                 "uk_base_rate": uk_base,
@@ -63,12 +64,12 @@ class MarketDataFetcher:
             return {"uk_base_rate": None, "uk_inflation": None}
 
     def get_us_rates(self) -> Dict[str, Optional[float]]:
-        """Get US federal funds rate and inflation rate"""
+        """Get US federal funds rate and inflation rate using proxies"""
         try:
-            # Using 2Y Treasury yield as proxy for Fed rate
-            us_base = 4.375  # Average of 4.25-4.5% range
-            # Current US CPI (fixed)
-            us_inflation = 3.0
+            # Use US 2Y Treasury yield as proxy for Fed rate (^IRX)
+            # Use US CPI as proxy for inflation (^CPIX)
+            us_base = self.get_stock_data("^IRX")
+            us_inflation = self.get_stock_data("^CPIX")
 
             return {
                 "us_base_rate": us_base,
