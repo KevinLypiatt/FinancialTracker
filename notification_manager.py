@@ -67,42 +67,55 @@ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
 
     def format_daily_summary(self, current_data):
         """Format the daily summary email"""
+        def format_value(value, is_currency=False, is_percentage=False, currency_symbol=''):
+            if value is None:
+                return 'N/A'
+            if is_currency:
+                return f"{currency_symbol}{value:,.2f}"
+            if is_percentage:
+                return f"{value:.2f}%"
+            return f"{value:.4f}"
+
         summary = f"""
 Daily Market Dashboard Summary
 Date: {datetime.now().strftime('%Y-%m-%d')}
 
 Gold
-USD: ${current_data.get('gold_usd', 'N/A'):,.2f}
-GBP: £{current_data.get('gold_gbp', 'N/A'):,.2f}
+USD: {format_value(current_data.get('gold_usd'), is_currency=True, currency_symbol='$')}
+GBP: {format_value(current_data.get('gold_gbp'), is_currency=True, currency_symbol='£')}
 
 Currency
-GBP/USD: {current_data.get('gbp_usd', 'N/A'):.4f}
+GBP/USD: {format_value(current_data.get('gbp_usd'))}
 
 Indices
-S&P 500: {current_data.get('sp500', 'N/A'):,.2f}
-Bitcoin: ${current_data.get('bitcoin', 'N/A'):,.2f}
+S&P 500: {format_value(current_data.get('sp500'), is_currency=False)}
+Bitcoin: {format_value(current_data.get('bitcoin'), is_currency=True, currency_symbol='$')}
 
 UK Rates
-Base Rate: {current_data.get('uk_base_rate', 'N/A'):.2f}%
-Inflation: {current_data.get('uk_inflation', 'N/A'):.2f}%
+Base Rate: {format_value(current_data.get('uk_base_rate'), is_percentage=True)}
+Inflation: {format_value(current_data.get('uk_inflation'), is_percentage=True)}
 
 US Rates
-Federal Funds Rate: {current_data.get('us_base_rate', 'N/A'):.2f}%
-Inflation: {current_data.get('us_inflation', 'N/A'):.2f}%
+Federal Funds Rate: {format_value(current_data.get('us_base_rate'), is_percentage=True)}
+Inflation: {format_value(current_data.get('us_inflation'), is_percentage=True)}
 
 US Treasury Yields
-2Y: {current_data.get('us_2y_yield', 'N/A'):.2f}%
-5Y: {current_data.get('us_5y_yield', 'N/A'):.2f}%
-10Y: {current_data.get('us_10y_yield', 'N/A'):.2f}%
-30Y: {current_data.get('us_30y_yield', 'N/A'):.2f}%
+2Y: {format_value(current_data.get('us_2y_yield'), is_percentage=True)}
+5Y: {format_value(current_data.get('us_5y_yield'), is_percentage=True)}
+10Y: {format_value(current_data.get('us_10y_yield'), is_percentage=True)}
+30Y: {format_value(current_data.get('us_30y_yield'), is_percentage=True)}
 """
         return summary
 
     def send_daily_summary(self, current_data):
         """Send daily summary email"""
-        subject = f"Daily Market Dashboard Summary - {datetime.now().strftime('%Y-%m-%d')}"
-        message = self.format_daily_summary(current_data)
-        self.send_email_alert(subject, message)
+        try:
+            subject = f"Daily Market Dashboard Summary - {datetime.now().strftime('%Y-%m-%d')}"
+            message = self.format_daily_summary(current_data)
+            return self.send_email_alert(subject, message)
+        except Exception as e:
+            logger.error(f"Failed to send daily summary: {str(e)}")
+            return False
 
     def check_and_notify(self, current_data, previous_data):
         """Check for significant changes and send notifications"""
