@@ -126,7 +126,8 @@ def main():
     previous_data = hist_data.iloc[1].to_dict() if hist_data is not None and len(hist_data) > 1 else None
 
     # Check for significant changes and send notifications
-    if previous_data:
+    # Only check notifications every 15 minutes to avoid spam
+    if int(time.time()) % 900 == 0:  # 900 seconds = 15 minutes
         notification_manager.check_and_notify(current_data, previous_data)
 
     # Display last update time
