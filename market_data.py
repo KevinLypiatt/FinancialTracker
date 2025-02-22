@@ -57,21 +57,49 @@ class MarketDataFetcher:
         return None
 
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
-        """Get UK base rate and inflation rate using Yahoo Finance"""
+        """Get UK base rate and inflation rate using FRED API"""
         try:
-            # Use Yahoo Finance symbols for UK rates
-            uk_base = self.get_stock_data("^GB2YR")  # UK 2Y Gilt yield as proxy for base rate
-            uk_gilt = self.get_stock_data("^GB10YR")  # UK 10Y Gilt yield as inflation indicator
+            # Get Bank of England Official Bank Rate from FRED
+            # Using a longer timeframe to ensure we have data
+            uk_base = self.fred.get_series('IUDSOIA', 
+                                       observation_start=datetime.now() - timedelta(days=60))
+            if uk_base.empty:
+                raise ValueError("No UK base rate data available")
+            latest_rate = float(uk_base.iloc[-1])
+
+            # Get UK CPI data for inflation calculation
+            uk_cpi = self.fred.get_series('GBRCPIALLMINMEI', 
+                                      observation_start=datetime.now() - timedelta(days=400))
+            if uk_cpi.empty:
+                raise ValueError("No UK CPI data available")
+            latest_cpi = float(uk_cpi.iloc[-1])
+            # Get year-ago value, handle case where we might not have exactly 13 months
+            year_ago_index = -13 if len(uk_cpi) >= 13 else 0
+            year_ago_cpi = float(uk_cpi.iloc[year_ago_index])
+            inflation_rate = ((latest_cpi - year_ago_cpi) / year_ago_cpi) * 100
 
             rates = {
-                "uk_base_rate": uk_base,
-                "uk_inflation": uk_gilt
+                "uk_base_rate": latest_rate,
+                "uk_inflation": inflation_rate
             }
-            self.logger.info(f"UK rates: {rates}")
+            self.logger.info(f"UK rates from FRED: {rates}")
             return rates
         except Exception as e:
             self.logger.error(f"Error fetching UK rates: {str(e)}")
-            return {"uk_base_rate": None, "uk_inflation": None}
+            # Fallback to Yahoo Finance data
+            try:
+                uk_base = self.get_stock_data("^GB2YR")  # UK 2Y Gilt yield as proxy
+                uk_gilt = self.get_stock_data("^GB10YR")  # UK 10Y Gilt yield
+
+                rates = {
+                    "uk_base_rate": uk_base,
+                    "uk_inflation": uk_gilt
+                }
+                self.logger.info(f"UK rates from Yahoo Finance (fallback): {rates}")
+                return rates
+            except Exception as fallback_error:
+                self.logger.error(f"Error fetching UK rates fallback: {str(fallback_error)}")
+                return {"uk_base_rate": None, "uk_inflation": None}
 
     def get_us_rates(self) -> Dict[str, Optional[float]]:
         """Get US federal funds rate and inflation rate using FRED API"""
