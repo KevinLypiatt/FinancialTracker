@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "beautifulsoup4>=4.13.3",
     "fredapi>=0.5.2",
     "pandas>=2.2.3",
     "plotly>=6.0.0",

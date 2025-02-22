@@ -57,11 +57,32 @@ class MarketDataFetcher:
         return None
 
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
-        """Get UK base rate and inflation rate using Yahoo Finance"""
+        """Get UK base rate from Bank of England and inflation rate"""
         try:
-            # Use Yahoo Finance symbols for UK rates
-            uk_base = self.get_stock_data("^GB2YR")  # UK 2Y Gilt yield as proxy for base rate
-            uk_gilt = self.get_stock_data("^GB10YR")  # UK 10Y Gilt yield as inflation indicator
+            # Fetch Bank of England base rate
+            url = "https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            cookies = {
+                'cookie_consent': 'accepted',
+                'cookie_consent_essential': 'accepted'
+            }
+            
+            session = requests.Session()
+            response = session.get(url, headers=headers, cookies=cookies)
+            
+            uk_base = None
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                table = soup.find('table')
+                if table:
+                    latest_row = table.find_all('tr')[1]
+                    rate = latest_row.find_all('td')[1].text.strip()
+                    uk_base = float(rate.replace('%', ''))
+
+            # Use Gilt yield as inflation indicator
+            uk_gilt = self.get_stock_data("^GB10YR")
 
             rates = {
                 "uk_base_rate": uk_base,
