@@ -1,5 +1,6 @@
 import logging
 from typing import Dict, Any, Optional
+import requests
 import yfinance as yf
 from datetime import datetime, timezone, timedelta
 import time
