@@ -1,0 +1,211 @@
+Quotes by Category
+
+Trading Economics can provide multiple quotes for several markets in a single request. The market categories that we have available are exchange rates, stock market indexes, share prices, commodity prices, government bonds and crypto currencies.
+
+At Trading Economics we strive for accuracy. However, please consider that while our economic data is rooted in official sources, our financial market data is aggregated from a diverse range of third-party providers. Trading Economics provides all content and data on an “as is” basis without any warranties and some of our market-related methods are under heavy development. If you are looking for official data, please contact the official exchange of that particular market or a recognized distributor.
+
+The Snapshot endpoint offers a momentary view of data, capturing specific information at a particular point in time. It generally includes details such as date, units, and general information, providing a static representation of current data.
+
+Commodities
+
+PYTHON
+JS
+C#
+Using Requests:
+
+                     
+import requests
+api_key = 'YOUR_API_KEY'
+url = f'https://api.tradingeconomics.com/markets/commodities?c={api_key}'
+data = requests.get(url).json()
+print(data)
+Or using our package:
+
+                     
+import tradingeconomics as te
+te.login('your_api_key')
+te.getMarketsData(marketsField = 'commodities')
+The response data format can be configured by appending the &f= parameter to the URL request.
+
+HTML
+JSON
+CSV
+XML
+/markets/commodities 
+
+Symbol	Ticker	Name	Country	Date	State	Last	Close	CloseDate	Group	URL	Importance	DailyChange	DailyPercentualChange	WeeklyChange	WeeklyPercentualChange	MonthlyChange	MonthlyPercentualChange	YearlyChange	YearlyPercentualChange	YTDChange	YTDPercentualChange	day_high	day_low	yesterday	lastWeek	lastMonth	lastYear	startYear	decimals	unit	frequency	StartDate	LastUpdate
+DCE:COM	DCE	Eggs CH	Commodity	7/12/2023 5:47:00 AM	OPEN	3933.00	3933.00	7/12/2023 12:00:00 AM	Livestock	/commodity/eggs-ch	1000	17.00	0.43	41.00	1.05	21.00	0.53	-683.00	-14.79	23.00	0.58	3943.00	3920.00	3916.00	3892.00	3912.00	4616.00	3910.00	2	CNY/T	Daily	11/8/2013 12:00:00 AM	7/12/2023 10:38:00 AM
+EECXM:IND	EECXM EU	Carbon Permits	commodity	7/12/2023 10:49:45 AM	OPEN	92.08	92.08	7/12/2023 10:50:00 AM	Index	/commodity/carbon	1000	0.82	0.90	1.70	1.88	-2.09	-2.21	8.22	9.80	4.08	4.63	92.87	91.31	91.26	90.38	94.17	83.86	88.00	2	EUR	Delayed	4/22/2005 12:00:00 AM	7/12/2023 11:00:00 AM
+C 1:COM	C A	Corn	commodity	7/12/2023 11:13:56 AM	OPEN	574.74	574.74	7/12/2023 11:14:00 AM	Agricultural	/commodity/corn	1001	2.99	0.52	26.49	4.83	-37.75	-6.16	-25.25	-4.20	-103.75	-15.29	577.50	566.72	571.75	548.25	612.50	600.00	678.50	4	USd/BU	Live	5/1/1912 12:00:00 AM	7/12/2023 11:14:00 AM
+Currencies
+
+PYTHON
+JS
+C#
+Using Requests:
+
+                     
+import requests
+api_key = 'YOUR_API_KEY'
+url = f'https://api.tradingeconomics.com/markets/currency?c={api_key}'
+data = requests.get(url).json()
+print(data)
+Or using our package:
+
+                     
+te.getMarketsData(marketsField = 'currency')
+HTML
+JSON
+CSV
+XML
+/markets/currency 
+
+Symbol	Ticker	Name	Country	Date	State	Last	Close	CloseDate	Group	URL	Importance	DailyChange	DailyPercentualChange	WeeklyChange	WeeklyPercentualChange	MonthlyChange	MonthlyPercentualChange	YearlyChange	YearlyPercentualChange	YTDChange	YTDPercentualChange	day_high	day_low	yesterday	lastWeek	lastMonth	lastYear	startYear	decimals	unit	frequency	StartDate	LastUpdate
+DAIUSD:CUR	DAI	Dai	other	7/12/2023 8:35:21 AM	OPEN	1.00	1.00	7/12/2023 8:35:00 AM	crypto stable	/daiusd:cur	215	0.00	0.00	0.00	0.04	0.00	0.00	0.00	0.01	0.00	0.01	1.00	0.99	0.99	0.99	1.00	0.99	0.99	5	Live	7/12/2023 8:35:00 AM		
+USTUSD:CUR	USDT	Tether	other	7/12/2023 8:52:09 AM	OPEN	0.99	0.99	7/12/2023 8:52:00 AM	crypto stable	/ustusd:cur	224	-0.00	-0.01	0.00	0.02	0.00	0.00	0.00	0.07	0.00	0.00	1.00	0.99	1.00	0.99	0.99	0.99	0.99	2	Live	7/12/2023 8:52:00 AM		
+USCUSD:CUR	USDC	USD Coin	other	7/12/2023 11:22:19 AM	OPEN	1.00	1.00	7/12/2023 11:22:00 AM	crypto stable	/uscusd:cur	225	-0.00	-0.01	0.00	0.00	0.00	-0.00	0.00	0.00	0.00	0.00	1.00	0.99	1.00	1.00	1.00	1.00	1.00	2	Live	7/12/2023 11:22:00 AM		
+Crosses
+
+PYTHON
+JS
+C#
+Using Requests:
+
+                     
+import requests
+api_key = 'YOUR_API_KEY'
+url = f'https://api.tradingeconomics.com/markets/currency?c={api_key}&cross=EUR'
+data = requests.get(url).json()
+print(data)
+Or using our package:
+
+                     
+te.getCurrencyCross(cross = 'EUR')
+HTML
+JSON
+CSV
+XML
+/markets/currency?c=your_api_key&cross=eur 
+
+Symbol	Ticker	Name	Country	Date	State	Last	Close	CloseDate	Group	URL	Importance	DailyChange	DailyPercentualChange	WeeklyChange	WeeklyPercentualChange	MonthlyChange	MonthlyPercentualChange	YearlyChange	YearlyPercentualChange	YTDChange	YTDPercentualChange	day_high	day_low	yesterday	lastWeek	lastMonth	lastYear	startYear	decimals	unit	frequency	StartDate	LastUpdate
+DAIUSD:CUR	DAI	Dai	other	7/12/2023 8:35:21 AM	OPEN	1.00	1.00	7/12/2023 8:35:00 AM	crypto stable	/daiusd:cur	215	0.00	0.00	0.00	0.04	0.00	0.00	0.00	0.01	0.00	0.01	1.00	0.99	0.99	0.99	1.00	0.99	0.99	5		Live		7/12/2023 8:35:00 AM
+USTUSD:CUR	USDT	Tether	other	7/12/2023 8:52:09 AM	OPEN	0.99	0.99	7/12/2023 8:52:00 AM	crypto stable	/ustusd:cur	224	-0.00	-0.01	0.00	0.02	0.00	0.00	0.00	0.07	0.00	0.00	1.00	0.99	1.00	0.99	0.99	0.99	0.99	2		Live		7/12/2023 8:52:00 AM
+USCUSD:CUR	USDC	USD Coin	other	7/12/2023 11:22:19 AM	OPEN	1.00	1.00	7/12/2023 12:00:00 AM	crypto stable	/uscusd:cur	225	-0.00	-0.00	0.00	0.00	-0.00	-0.00	0.00	0.00	0.00	0.00	1.00	0.99	1.00	1.00	1.00	1.00	1.00	2		Live		7/12/2023 11:30:00 AM
+Crypto
+
+PYTHON
+JS
+C#
+Using Requests:
+
+                     
+import requests
+api_key = 'YOUR_API_KEY'
+url = f'https://api.tradingeconomics.com/markets/crypto?c={api_key}'
+data = requests.get(url).json()
+print(data)
+Or using our package:
+
+                     
+te.getMarketsData(marketsField = 'crypto')
+HTML
+JSON
+CSV
+XML
+/markets/crypto 
+
+Symbol	Ticker	Name	Country	Date	State	Last	Close	CloseDate	Group	URL	Importance	DailyChange	DailyPercentualChange	WeeklyChange	WeeklyPercentualChange	MonthlyChange	MonthlyPercentualChange	YearlyChange	YearlyPercentualChange	YTDChange	YTDPercentualChange	day_high	day_low	yesterday	lastWeek	lastMonth	lastYear	startYear	decimals	unit	frequency	StartDate	LastUpdate
+LNKUSD:CUR	LINK	Chainlink	other	7/12/2023 8:41:33 AM	OPEN	6.00	6.00	7/12/2023 8:42:00 AM	crypto	/lnkusd:cur	223	0.05	0.88	-0.05	-0.9	0.97	18.35	0.09	1.54	0.69	12.52	6.27	6.16	6.21	6.32	5.29	6.17	5.56	4		Live		7/12/2023 8:42:00 AM
+USTUSD:CUR	USDT	Tether	other	7/12/2023 8:52:09 AM	OPEN	0.99	0.99	7/12/2023 8:52:00 AM	crypto stable	/ustusd:cur	224	-0.00	-0.01	0.00	0.02	0.00	0.00	0.00	0.07	0.00	0.00	1.00	0.99	1.00	0.99	0.99	0.99	0.99	2		Live		7/12/2023 8:52:00 AM
+USCUSD:CUR	USDC	USD Coin	other	7/12/2023 11:22:19 AM	OPEN	1.00	1.00	7/12/2023 12:00:00 AM	crypto stable	/uscusd:cur	225	-0.00	-0.00	0.00	0.00	-0.00	-0.00	0.00	0.00	0.00	0.00	1.00	0.99	1.00	1.00	1.00	1.00	1.00	2		Live		7/12/2023 11:30:00 AM
+Stock Market
+
+PYTHON
+JS
+C#
+Using Requests:
+
+                     
+import requests
+api_key = 'YOUR_API_KEY'
+url = f'https://api.tradingeconomics.com/markets/index?c={api_key}'
+data = requests.get(url).json()
+print(data)
+Or using our package:
+
+                     
+te.getMarketsData(marketsField = 'index')
+HTML
+JSON
+CSV
+XML
+/markets/index 
+
+Symbol	Ticker	Name	Country	Date	State	Last	Close	CloseDate	Group	URL	Importance	DailyChange	DailyPercentualChange	WeeklyChange	WeeklyPercentualChange	MonthlyChange	MonthlyPercentualChange	YearlyChange	YearlyPercentualChange	YTDChange	YTDPercentualChange	day_high	day_low	yesterday	lastWeek	lastMonth	lastYear	startYear	decimals	unit	frequency	StartDate	LastUpdate
+BKA:IND	KuwwaitStoarket	Kuwait All Share	Kuwait	7/12/2023 9:38:18 AM	CLOSED	7289.32	7289.32	7/12/2023 12:00:00 AM	Asia	/kuwait/stock-market	1000	25.84	0.35	110.48	1.53	364.02	5.25	-70.98	-0.96	-2.80	-0.03	7310.93	7275.39	7263.48	7178.84	6925.30	7360.30	7292.12	2	Index Points	Delayed	4/1/2018 12:00:00 AM	7/12/2023 1:13:00 PM
+BKX:IND	BKX	US Bank Index	United States	7/11/2023 8:02:31 PM	CLOSED	42.09	42.09	7/11/2023 12:00:00 AM	America G20 Major	/bkx:ind	1000	0.67	1.61	0.68	1.64	0.15	0.35	-10.22	-19.53	-9.53	-18.46	42.19	41.39	41.42	41.41	41.94	52.31	51.62	2	Index Points	Live		7/12/2023 1:05:00 PM
+BHSEEI:IND	BAHRAINSTOMAR	Estirad	Bahrain	7/12/2023 9:57:00 AM	CLOSED	1969.96	1969.96	7/12/2023 12:00:00 AM	Asia	/bahrain/stock-market	1010	10.39	0.53	9.35	0.47	15.37	0.78	97.68	5.21	74.70	3.94	1969.96	1958.12	1959.57	1960.61	1954.58	1872.28	1895.26	2	Index Points	Delayed	8/31/2015 12:00:00 AM	7/12/2023 1:13:00 PM
+Bonds
+
+PYTHON
+JS
+C#
+Using Requests:
+
+                     
+import requests
+api_key = 'YOUR_API_KEY'
+url = f'https://api.tradingeconomics.com/markets/bond?c={api_key}'
+data = requests.get(url).json()
+print(data)
+Or using our package:
+
+                     
+te.getMarketsData(marketsField = 'bond')
+HTML
+JSON
+CSV
+XML
+/markets/bond 
+
+Symbol	Ticker	Name	Country	Date	State	Last	Close	CloseDate	Group	URL	Importance	DailyChange	DailyPercentualChange	WeeklyChange	WeeklyPercentualChange	MonthlyChange	MonthlyPercentualChange	YearlyChange	YearlyPercentualChange	YTDChange	YTDPercentualChange	day_high	day_low	yesterday	lastWeek	lastMonth	lastYear	startYear	decimals	unit	frequency	StartDate	LastUpdate
+GBTPGR15Y:IND	ITA1YBY	Italy 15Y	Italy	7/12/2023 12:00:00 AM	CLOSED	4.554	4.554	7/12/2023 12:00:00 AM	Europe	/italy/15-year-bond-yield	1000	-0.039	-0.0410	0.23	0.2280	0.248	0.2460	1.234	1.2320	-0.201	-0.2030	4.569	4.543	4.593	4.324	4.306	3.32	4.755	4	percent	Daily	2/11/2002 12:00:00 AM	7/12/2023 12:29:00 PM
+GDBR15:IND	DEU1YBY	Germany 15Y	Germany	7/12/2023 12:00:00 AM	CLOSED	2.736	2.736	7/12/2023 12:00:00 AM	Europe 15Y	/germany/15-year-bond-yield	1000	-0.02	-0.0240	0.162	0.1580	0.128	0.1240	1.374	1.3700	0.071	0.0670	2.759	2.718	2.756	2.574	2.608	1.362	2.665	4	percent	Daily	11/9/2010 12:00:00 AM	7/12/2023 11:19:00 AM
+GSPG15YR:IND	ESP1YBY	Spain 15Y	Spain	7/12/2023 12:00:00 AM	CLOSED	3.877	3.877	7/12/2023 12:00:00 AM	Europe 15Y	/spain/15-year-bond-yield	1000	-0.028	-0.0350	0.169	0.1620	0.169	0.1620	1.202	1.1950	-0.094	-0.1010	3.881	3.859	3.905	3.708	3.708	2.675	3.971	4	percent	Daily	2/24/1994 12:00:00 AM	7/12/2023 12:27:00 PM
+Response fields
+
+Field	Type	Description	Example
+Symbol	string	Unique symbol used by Trading Economics	“6758:JP”
+Ticker	string	Unique ticker used by Trading Economics	“6758”
+Name	string	Indicator full name	“Sony”
+Country	string	Country or category name	“Japan”
+Date	string	Release time and date in UTC	“2023-04-13T00:00:00”
+State	string	Market current state	“CLOSED”
+Last	number	Latest released value	11900.00
+Close	number	Latest value before market close	11900.00
+CloseDate	string	Date and time of the last close	“2023-04-13T00:00:00”
+Group	string	Group name	“Livestock”
+URL	string	Hyperlink at Trading Economics	“/commodity/eggs-ch”
+Importance	number	Indicator importance from 0 (lowest) to 1000 (highest)	1000
+DailyChange	number	Difference between last close and current price	-8.00
+DailyPercentualChange	number	Difference in percentage between last close and current price	-0.18
+WeeklyChange	number	Difference between last week close and current price price	56.00
+WeeklyPercentualChange	number	Difference in percentage between last week close and current price	1.27
+MonthlyChange	number	Difference between last month close and current price	-139.00
+MonthlyPercentualChange	number	Difference in percentage between last month close and current price	-3.03
+YearlyChange	number	Difference between last year close and current price	-15.00
+YearlyPercentualChange	number	Difference in percentage between last year close and current price	-0.33
+YTDChange	number	Difference between last year last close and current price	525.00
+YTDPercentualChange	number	Difference in percentage between last year last close and current price	13.42
+day_high	number	Highest value of the day	4460.00
+day_low	number	Lowest value of the day	4410.00
+Yesterday	number	Yesterday close	4443.00
+LastWeek	number	Last week close	4379.00
+LastMonth	number	Last month close	4574.00
+LastYear	number	Last year close	4450.00
+StartYear	number	Start year close	3910.00
+Decimals	number	Number of decimal places	2.0
+Unit	string	Unit of the value	“CNY/T”
+Frequency	string	Market frequency	“Daily”
+StartDate	string	Date of the first market entry	“2013-11-08T00:00:00”
+LastUpdate	string	Time when new data was inserted or changed
