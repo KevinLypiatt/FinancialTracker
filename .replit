@@ -5,7 +5,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "streamlit run dashboard.py"]
+run = ["sh", "-c", "streamlit run dashboard.py --server.port 5000"]
 
 [workflows]
 runButton = "Project"
@@ -39,7 +39,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run dashboard.py"
+args = "streamlit run dashboard.py --server.port 5000"
 waitForPort = 5000
 
 [[workflows.workflow]]
