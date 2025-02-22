@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Markets Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFFFFF;
+        }
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .metric-change {
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        .change-up { color: #28a745; }
+        .change-down { color: #dc3545; }
+        .change-neutral { color: #6c757d; }
+        h1 { color: #262730; }
+        .last-updated {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>📈 Financial Markets Dashboard</h1>
+        <div id="lastUpdated" class="last-updated"></div>
+        
+        <div class="metric-grid" id="mainMetrics"></div>
+        
+        <h2>Economic Indicators</h2>
+        <div class="metric-grid" id="economicIndicators"></div>
+        
+        <h2>US Treasury Yield Curve</h2>
+        <div class="metric-grid" id="yieldCurve"></div>
+    </div>
+
+    <script>
+        function updateDashboard() {
+            fetch('/api/market-data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('lastUpdated').textContent = `Last updated: ${data.timestamp}`;
+                    
+                    // Update main metrics
+                    const mainMetricsHtml = Object.entries(data.metrics).map(([key, metric]) => `
+                        <div class="metric-card">
+                            <div class="metric-title">${key.replace('_', ' ').toUpperCase()}</div>
+                            <div>
+                                <span class="metric-value">${metric.value}</span>
+                                <span class="metric-change ${getChangeClass(metric.direction)}">${metric.change}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    document.getElementById('mainMetrics').innerHTML = mainMetricsHtml;
+                    
+                    // Update economic indicators
+                    const economicIndicatorsHtml = Object.entries(data.rates).map(([country, rates]) => 
+                        Object.entries(rates).map(([rate, value]) => `
+                            <div class="metric-card">
+                                <div class="metric-title">${country.toUpperCase()} ${rate.replace('_', ' ').toUpperCase()}</div>
+                                <div>
+                                    <span class="metric-value">${value.value}</span>
+                                    <span class="metric-change ${getChangeClass(value.direction)}">${value.change}</span>
+                                </div>
+                            </div>
+                        `).join('')
+                    ).join('');
+                    document.getElementById('economicIndicators').innerHTML = economicIndicatorsHtml;
+                    
+                    // Update yield curve
+                    const yieldCurveHtml = Object.entries(data.yields).map(([term, yield_data]) => `
+                        <div class="metric-card">
+                            <div class="metric-title">${term} Treasury Yield</div>
+                            <div>
+                                <span class="metric-value">${yield_data.value}</span>
+                                <span class="metric-change ${getChangeClass(yield_data.direction)}">${yield_data.change}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    document.getElementById('yieldCurve').innerHTML = yieldCurveHtml;
+                });
+        }
+
+        function getChangeClass(direction) {
+            switch(direction) {
+                case 'normal': return 'change-up';
+                case 'inverse': return 'change-down';
+                default: return 'change-neutral';
+            }
+        }
+
+        // Update initially and then every minute
+        updateDashboard();
+        setInterval(updateDashboard, 60000);
+    </script>
+</body>
+</html>

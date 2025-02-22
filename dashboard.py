@@ -113,14 +113,14 @@ def create_yield_curve_chart(data):
 def main():
     st.title("📈 Financial Markets Dashboard")
 
-    # Get historical data
-    hist_data = get_historical_data()
-
     # Initialize market data fetcher
     market_fetcher = MarketDataFetcher()
 
     # Get current data
     current_data = market_fetcher.get_market_data()
+
+    # Get historical data
+    hist_data = get_historical_data()
 
     # Get previous day's data
     previous_data = hist_data.iloc[1].to_dict() if hist_data is not None and len(hist_data) > 1 else None
