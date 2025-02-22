@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, Any, Optional
 import requests
+from bs4 import BeautifulSoup
 import yfinance as yf
 from datetime import datetime, timezone, timedelta
 import time
