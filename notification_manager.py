@@ -111,10 +111,12 @@ US Treasury Yields
         return summary
 
     def should_send_daily_summary(self):
-        """Check if we should send daily summary (9:00 AM UK time)"""
+        """Check if we should send a daily summary"""
         now = datetime.now(timezone.utc)
-        uk_time = now.astimezone(timezone(timedelta(hours=0)))  # UK timezone
-        return uk_time.hour == 9 and uk_time.minute == 0
+        if self.last_summary_date is None or self.last_summary_date.date() < now.date():
+            self.last_summary_date = now
+            return True
+        return False
 
     def send_daily_summary(self, current_data):
         """Send daily summary email"""
