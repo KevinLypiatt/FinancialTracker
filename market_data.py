@@ -51,8 +51,8 @@ class MarketDataFetcher:
         """Get UK base rate and inflation rate"""
         try:
             # Using more accurate proxies for UK rates
-            uk_base = 5.25  # Current Bank of England base rate (fixed)
-            uk_inflation = 4.0  # Current UK CPI (fixed)
+            uk_base = 4.5  # Current Bank of England base rate (fixed)
+            uk_inflation = 3.0  # Current UK CPI (fixed)
 
             return {
                 "uk_base_rate": uk_base,
@@ -66,9 +66,9 @@ class MarketDataFetcher:
         """Get US federal funds rate and inflation rate"""
         try:
             # Using 2Y Treasury yield as proxy for Fed rate
-            us_base = self.get_stock_data("^IRX")
+            us_base = 4.375  # Average of 4.25-4.5% range
             # Current US CPI (fixed)
-            us_inflation = 3.1
+            us_inflation = 3.0
 
             return {
                 "us_base_rate": us_base,

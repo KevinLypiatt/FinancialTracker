@@ -141,7 +141,7 @@ def main():
         st.markdown("<div class='data-card'>", unsafe_allow_html=True)
         st.metric(
             "Gold (USD)",
-            f"${current_data['gold_usd']:,.2f}",
+            f"${int(current_data['gold_usd']):,}",
             format_percentage(calculate_change(current_data, previous_data, 'gold_usd')),
             delta_color=get_delta_color(calculate_change(current_data, previous_data, 'gold_usd'))
         )
@@ -152,7 +152,7 @@ def main():
         st.markdown("<div class='data-card'>", unsafe_allow_html=True)
         st.metric(
             "Gold (GBP)",
-            f"£{current_data['gold_gbp']:,.2f}",
+            f"£{int(current_data['gold_gbp']):,}",
             format_percentage(calculate_change(current_data, previous_data, 'gold_gbp')),
             delta_color=get_delta_color(calculate_change(current_data, previous_data, 'gold_gbp'))
         )
@@ -177,7 +177,7 @@ def main():
         st.markdown("<div class='data-card'>", unsafe_allow_html=True)
         st.metric(
             "S&P 500",
-            f"{current_data['sp500']:,.2f}",
+            f"{int(current_data['sp500']):,}",
             format_percentage(calculate_change(current_data, previous_data, 'sp500')),
             delta_color=get_delta_color(calculate_change(current_data, previous_data, 'sp500'))
         )
@@ -188,7 +188,7 @@ def main():
         st.markdown("<div class='data-card'>", unsafe_allow_html=True)
         st.metric(
             "Bitcoin (USD)",
-            f"${current_data['bitcoin']:,.2f}",
+            f"${int(current_data['bitcoin']):,}",
             format_percentage(calculate_change(current_data, previous_data, 'bitcoin')),
             delta_color=get_delta_color(calculate_change(current_data, previous_data, 'bitcoin'))
         )
