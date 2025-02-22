@@ -53,11 +53,12 @@ class MarketDataFetcher:
             import os
             import requests
             api_key = os.getenv("TRADING_ECONOMICS_KEY")
-            url = f"https://api.tradingeconomics.com/historical/country/{country}/indicator/{indicator}"
-            headers = {'Authorization': f'Client {api_key}'}
-            response = requests.get(url, headers=headers)
+            url = f"https://api.tradingeconomics.com/markets/search/{indicator}?c={api_key}"
+            response = requests.get(url)
             data = response.json()
-            return float(data[0]['value']) if data else None
+            if data and len(data) > 0:
+                return float(data[0].get('Last', 0))
+            return None
         except Exception as e:
             self.logger.error(f"Error fetching Trading Economics data: {str(e)}")
             return None
@@ -65,8 +66,8 @@ class MarketDataFetcher:
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
         """Get UK base rate and inflation rate from Trading Economics"""
         try:
-            uk_base = self.get_trading_economics_data("united kingdom", "bank-rate")
-            uk_inflation = self.get_trading_economics_data("united kingdom", "inflation-rate")
+            uk_base = self.get_trading_economics_data("uk", "BOERUKM")  # UK Bank Rate
+            uk_inflation = self.get_trading_economics_data("uk", "UKRPCJYR")  # UK RPI
 
             rates = {
                 "uk_base_rate": uk_base,
@@ -81,8 +82,8 @@ class MarketDataFetcher:
     def get_us_rates(self) -> Dict[str, Optional[float]]:
         """Get US federal funds rate and inflation rate from Trading Economics"""
         try:
-            us_base = self.get_trading_economics_data("united states", "fed-funds-rate")
-            us_inflation = self.get_trading_economics_data("united states", "inflation-rate")
+            us_base = self.get_trading_economics_data("us", "FDTR")  # Fed Funds Rate
+            us_inflation = self.get_trading_economics_data("us", "CPIAUCSL")  # US CPI
 
             rates = {
                 "us_base_rate": us_base,
