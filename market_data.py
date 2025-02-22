@@ -48,33 +48,28 @@ class MarketDataFetcher:
             return None
 
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
-        """Get UK base rate and inflation rate using proxies"""
+        """Get UK base rate and inflation rate using fixed values"""
         try:
-            # Use UK 2Y Gilt yield as proxy for base rate (^GBVX)
-            # Use UK RPI as proxy for inflation (^UKRPI)
-            uk_base = self.get_stock_data("^GBVX")
-            uk_inflation = self.get_stock_data("^UKRPI")
-
-            return {
-                "uk_base_rate": uk_base,
-                "uk_inflation": uk_inflation
+            # Using fixed values for UK rates
+            rates = {
+                "uk_base_rate": 4.5,  # Current Bank of England base rate
+                "uk_inflation": 3.0   # Current UK CPI
             }
+            self.logger.info(f"UK rates: {rates}")  # Add logging to debug
+            return rates
         except Exception as e:
             self.logger.error(f"Error fetching UK rates: {str(e)}")
             return {"uk_base_rate": None, "uk_inflation": None}
 
     def get_us_rates(self) -> Dict[str, Optional[float]]:
-        """Get US federal funds rate and inflation rate using proxies"""
+        """Get US federal funds rate and inflation rate"""
         try:
-            # Use US 2Y Treasury yield as proxy for Fed rate (^IRX)
-            # Use US CPI as proxy for inflation (^CPIX)
-            us_base = self.get_stock_data("^IRX")
-            us_inflation = self.get_stock_data("^CPIX")
-
-            return {
-                "us_base_rate": us_base,
-                "us_inflation": us_inflation
+            rates = {
+                "us_base_rate": 4.375,  # Average of 4.25-4.5% range
+                "us_inflation": 3.0     # Current US CPI
             }
+            self.logger.info(f"US rates: {rates}")  # Add logging to debug
+            return rates
         except Exception as e:
             self.logger.error(f"Error fetching US rates: {str(e)}")
             return {"us_base_rate": None, "us_inflation": None}
@@ -89,15 +84,22 @@ class MarketDataFetcher:
                 "bitcoin": self.get_stock_data("BTC-USD"),
             }
 
-            data.update(self.get_us_yield_curve())
-            data.update(self.get_uk_rates())
-            data.update(self.get_us_rates())
+            # Get rates data
+            uk_rates = self.get_uk_rates()
+            us_rates = self.get_us_rates()
 
+            # Update the data dictionary with all rates
+            data.update(self.get_us_yield_curve())
+            data.update(uk_rates)
+            data.update(us_rates)
+
+            # Calculate Gold in GBP
             if data["gold_usd"] and data["gbp_usd"]:
                 data["gold_gbp"] = data["gold_usd"] / data["gbp_usd"]
             else:
                 data["gold_gbp"] = None
 
+            self.logger.info(f"Complete market data: {data}")  # Add logging to debug
             return data
         except Exception as e:
             self.logger.error(f"Error fetching market data: {str(e)}")

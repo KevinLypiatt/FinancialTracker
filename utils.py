@@ -2,14 +2,10 @@ import math
 
 def get_delta_color(change):
     """
-    Determines the color for the delta indicator based on the change value.
-    Returns:
-    - "normal" for standard coloring (green for positive, red for negative)
-    - "off" for no coloring
+    Determines the color for the delta indicator.
+    Always returns "off" to keep metrics in black.
     """
-    if math.isclose(change, 0, abs_tol=1e-4):  # Handle floating point comparison
-        return "off"  # No color for zero change
-    return "normal"  # Standard coloring (green for positive, red for negative)
+    return "off"  # No color for all changes
 
 def format_percentage(value):
     """
