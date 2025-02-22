@@ -83,12 +83,23 @@ class MarketDataFetcher:
                     rate = latest_row.find_all('td')[1].text.strip()
                     uk_base = float(rate.replace('%', ''))
 
-            # Use Gilt yield as inflation indicator
-            uk_gilt = self.get_stock_data("^GB10YR")
+            # Get UK inflation from ONS
+            ons_url = "https://nwp-prototype.ons.gov.uk/economy/inflation-and-price-indices/"
+            ons_response = session.get(ons_url, headers=headers)
+            
+            uk_inflation = None
+            if ons_response.status_code == 200:
+                soup = BeautifulSoup(ons_response.text, 'html.parser')
+                cpi_div = soup.find('div', class_='featured-chart__item-description')
+                if cpi_div:
+                    text = cpi_div.text.strip()
+                    cpi_part = text.split('CPI')[1]
+                    rate = cpi_part.split('rose by')[1].split('%')[0].strip()
+                    uk_inflation = float(rate)
 
             rates = {
                 "uk_base_rate": uk_base,
-                "uk_inflation": uk_gilt
+                "uk_inflation": uk_inflation
             }
             self.logger.info(f"UK rates: {rates}")
             return rates
