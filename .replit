@@ -23,6 +23,14 @@ args = "test_supabase"
 task = "workflow.run"
 args = "Dashboard"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Daily Data Collection"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Notification Test"
+
 [[workflows.workflow]]
 name = "test_supabase"
 author = "agent"
@@ -51,6 +59,34 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "python -m streamlit run dashboard.py --server.address=0.0.0.0 --server.port=5000 --server.headless=true"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Daily Data Collection"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python daily_collector.py"
+
+[[workflows.workflow]]
+name = "Notification Test"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python test_notifications.py"
 
 [[ports]]
 localPort = 5000

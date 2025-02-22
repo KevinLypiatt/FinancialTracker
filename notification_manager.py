@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timezone
 import logging
+import traceback
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,6 +47,8 @@ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
     def send_email_alert(self, subject, message):
         """Send email alert"""
         try:
+            logger.info(f"Attempting to send email: {subject}")
+
             # Create message
             msg = MIMEMultipart()
             msg['From'] = self.sender_email
@@ -57,6 +60,7 @@ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
 
             # Create SMTP session
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                logger.info("Establishing SMTP connection...")
                 server.starttls()
                 server.login(self.sender_email, self.sender_password)
                 server.send_message(msg)
@@ -66,6 +70,7 @@ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
 
         except Exception as e:
             logger.error(f"Failed to send email alert: {str(e)}")
+            logger.error(f"Full error details: {traceback.format_exc()}")
             return False
 
     def format_daily_summary(self, current_data):
@@ -113,8 +118,19 @@ US Treasury Yields
     def should_send_daily_summary(self):
         """Check if we should send a daily summary"""
         now = datetime.now(timezone.utc)
-        if self.last_summary_date is None or self.last_summary_date.date() < now.date():
+        target_hour = 9  # 9:00 AM UTC
+
+        # Check if it's a new day AND it's 9:00 AM (allowing for a 5-minute window)
+        is_new_day = self.last_summary_date is None or self.last_summary_date.date() < now.date()
+        is_target_time = now.hour == target_hour and now.minute < 5
+
+        logger.info(f"Checking daily summary conditions at {now}")
+        logger.info(f"Last summary date: {self.last_summary_date}")
+        logger.info(f"Is new day: {is_new_day}, Is target time: {is_target_time}")
+
+        if is_new_day and is_target_time:
             self.last_summary_date = now
+            logger.info(f"Scheduling daily summary for {now}")
             return True
         return False
 
@@ -122,13 +138,23 @@ US Treasury Yields
         """Send daily summary email"""
         try:
             if not self.should_send_daily_summary():
+                logger.debug("Not time for daily summary yet")
                 return False
 
+            logger.info("Preparing daily summary email...")
             subject = f"Daily Market Dashboard Summary - {datetime.now().strftime('%Y-%m-%d')}"
             message = self.format_daily_summary(current_data)
-            return self.send_email_alert(subject, message)
+            success = self.send_email_alert(subject, message)
+
+            if success:
+                logger.info("Daily summary email sent successfully")
+            else:
+                logger.error("Failed to send daily summary email")
+
+            return success
         except Exception as e:
             logger.error(f"Failed to send daily summary: {str(e)}")
+            logger.error(f"Full error details: {traceback.format_exc()}")
             return False
 
     def check_and_notify(self, current_data, previous_data):
