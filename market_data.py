@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 import time
 from threading import Lock
 from dataclasses import dataclass
+import os
+import requests
 
 @dataclass
 class RateLimiter:
