@@ -48,54 +48,20 @@ class MarketDataFetcher:
             return None
 
     def get_trading_economics_data(self, country: str, indicator: str) -> Optional[float]:
-        """Get data from Trading Economics API"""
-        try:
-            import os
-            import requests
-            api_key = os.getenv("TRADING_ECONOMICS_KEY")
-            if not api_key:
-                self.logger.error("Trading Economics API key not found")
-                return None
-
-            # Use the proper indicators endpoint
-            url = f"https://api.tradingeconomics.com/historical/country/{country}/indicator/{indicator}"
-            headers = {'Authorization': f'Client {api_key}'}
-
-            self.logger.info(f"Fetching data for {country} - {indicator}")
-            response = requests.get(url, headers=headers)
-
-            if response.status_code != 200:
-                self.logger.error(f"API request failed with status {response.status_code}: {response.text}")
-                return None
-
-            data = response.json()
-            if not data:
-                self.logger.error(f"Empty response for {indicator}")
-                return None
-
-            # Trading Economics returns an array of historical values
-            # Get the most recent value
-            latest_data = sorted(data, key=lambda x: x.get('DateTime', ''), reverse=True)[0]
-            value = latest_data.get('Value')
-
-            if value is not None:
-                return float(value)
-            return None
-
-        except Exception as e:
-            self.logger.error(f"Error fetching Trading Economics data: {str(e)}")
-            return None
+        """This method is deprecated and will be removed"""
+        self.logger.warning("Trading Economics API is no longer used")
+        return None
 
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
-        """Get UK base rate and inflation rate from Trading Economics"""
+        """Get UK base rate and inflation rate using Yahoo Finance"""
         try:
-            # Use proper indicator codes
-            uk_base = self.get_trading_economics_data("united-kingdom", "bank-rate")  # UK Bank Rate
-            uk_inflation = self.get_trading_economics_data("united-kingdom", "inflation-rate")  # UK CPI YoY
+            # Use Yahoo Finance symbols for UK rates
+            uk_base = self.get_stock_data("^GB2YR")  # UK 2Y Gilt yield as proxy for base rate
+            uk_gilt = self.get_stock_data("^GB10YR")  # UK 10Y Gilt yield as inflation indicator
 
             rates = {
                 "uk_base_rate": uk_base,
-                "uk_inflation": uk_inflation
+                "uk_inflation": uk_gilt
             }
             self.logger.info(f"UK rates: {rates}")
             return rates
@@ -104,15 +70,19 @@ class MarketDataFetcher:
             return {"uk_base_rate": None, "uk_inflation": None}
 
     def get_us_rates(self) -> Dict[str, Optional[float]]:
-        """Get US federal funds rate and inflation rate from Trading Economics"""
+        """Get US federal funds rate and inflation rate using Yahoo Finance"""
         try:
-            # Use proper indicator codes
-            us_base = self.get_trading_economics_data("united-states", "interest-rate")  # Fed Funds Rate
-            us_inflation = self.get_trading_economics_data("united-states", "inflation-rate")  # US CPI YoY
+            # Use Yahoo Finance symbols for US rates
+            us_base = self.get_stock_data("^IRX")  # US 13-week Treasury Bill rate
+            us_tips = self.get_stock_data("^TNX")  # US 10Y Treasury yield as inflation indicator
+
+            # Convert basis points to percentage only if us_base is not None
+            if us_base is not None:
+                us_base = us_base / 100
 
             rates = {
                 "us_base_rate": us_base,
-                "us_inflation": us_inflation
+                "us_inflation": us_tips
             }
             self.logger.info(f"US rates: {rates}")
             return rates
