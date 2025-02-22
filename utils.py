@@ -9,7 +9,7 @@ def get_delta_color(change):
     if change > 0:
         return "normal"  # Green
     elif change < 0:
-        return None  # Red
+        return "inverse"  # Red
     return "off"  # Gray for zero
 
 def format_percentage(value):
