@@ -47,11 +47,26 @@ class MarketDataFetcher:
             self.logger.error(f"Error fetching stock data for {symbol}: {str(e)}")
             return None
 
-    def get_uk_rates(self) -> Dict[str, Optional[float]]:
-        """Get UK base rate and inflation rate using market data"""
+    def get_trading_economics_data(self, country: str, indicator: str) -> Optional[float]:
+        """Get data from Trading Economics API"""
         try:
-            uk_base = self.get_stock_data("^GBVX")
-            uk_inflation = self.get_stock_data("^RPI.L")
+            import os
+            import requests
+            api_key = os.getenv("TRADING_ECONOMICS_KEY")
+            url = f"https://api.tradingeconomics.com/historical/country/{country}/indicator/{indicator}"
+            headers = {'Authorization': f'Client {api_key}'}
+            response = requests.get(url, headers=headers)
+            data = response.json()
+            return float(data[0]['value']) if data else None
+        except Exception as e:
+            self.logger.error(f"Error fetching Trading Economics data: {str(e)}")
+            return None
+
+    def get_uk_rates(self) -> Dict[str, Optional[float]]:
+        """Get UK base rate and inflation rate from Trading Economics"""
+        try:
+            uk_base = self.get_trading_economics_data("united kingdom", "bank-rate")
+            uk_inflation = self.get_trading_economics_data("united kingdom", "inflation-rate")
 
             rates = {
                 "uk_base_rate": uk_base,
@@ -64,16 +79,16 @@ class MarketDataFetcher:
             return {"uk_base_rate": None, "uk_inflation": None}
 
     def get_us_rates(self) -> Dict[str, Optional[float]]:
-        """Get US federal funds rate and inflation rate"""
+        """Get US federal funds rate and inflation rate from Trading Economics"""
         try:
-            us_base = self.get_stock_data("^IRX")
-            us_inflation = self.get_stock_data("^CPIX")
+            us_base = self.get_trading_economics_data("united states", "fed-funds-rate")
+            us_inflation = self.get_trading_economics_data("united states", "inflation-rate")
 
             rates = {
                 "us_base_rate": us_base,
                 "us_inflation": us_inflation
             }
-            self.logger.info(f"US rates: {rates}")  # Add logging to debug
+            self.logger.info(f"US rates: {rates}")
             return rates
         except Exception as e:
             self.logger.error(f"Error fetching US rates: {str(e)}")
