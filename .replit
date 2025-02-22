@@ -8,7 +8,7 @@ deploymentTarget = "autoscale"
 run = ["sh", "-c", "streamlit run dashboard.py --server.port 5000"]
 
 [workflows]
-runButton = "Project"
+runButton = "Streamlit Dashboard"
 
 [[workflows.workflow]]
 name = "Project"
@@ -22,6 +22,10 @@ args = "Streamlit Dashboard"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Daily Collector"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run dashboard.py --server.port 5000"
 
 [[workflows.workflow]]
 name = "Streamlit Dashboard"
