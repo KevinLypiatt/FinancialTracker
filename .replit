@@ -49,7 +49,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run dashboard.py"
+args = "python -m streamlit run dashboard.py --server.address=0.0.0.0 --server.port=5000 --server.headless=true"
 waitForPort = 5000
 
 [[ports]]
