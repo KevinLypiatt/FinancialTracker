@@ -5,7 +5,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "scheduled"
-run = ["sh", "-c", "streamlit run dashboard.py --server.port 3000 --server.address 0.0.0.0"]
+run = ["sh", "-c", "python -m streamlit run dashboard.py --server.port 3000 --server.address 0.0.0.0"]
 
 [workflows]
 runButton = "Project"
@@ -20,7 +20,7 @@ agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Dashboard"
+args = "Financial Dashboard"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
@@ -28,7 +28,7 @@ args = "streamlit run dashboard.py --server.port 5000 --server.address 0.0.0.0"
 waitForPort = 5000
 
 [[workflows.workflow]]
-name = "Dashboard"
+name = "Financial Dashboard"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -39,7 +39,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run dashboard.py --server.port 3000 --server.address 0.0.0.0"
+args = "python -m streamlit run dashboard.py --server.port 3000 --server.address 0.0.0.0"
 waitForPort = 3000
 
 [[workflows.workflow]]
