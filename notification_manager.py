@@ -2,7 +2,7 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -26,6 +26,9 @@ class NotificationManager:
         self.sender_email = os.getenv('NOTIFICATION_EMAIL')
         self.sender_password = os.getenv('NOTIFICATION_PASSWORD')
         self.recipient_email = os.getenv('RECIPIENT_EMAIL')
+
+        # Track last summary sent
+        self.last_summary_date = None
 
     def format_alert_message(self, asset, current_value, previous_value, percent_change):
         """Format the email alert message"""
@@ -107,9 +110,20 @@ US Treasury Yields
 """
         return summary
 
+    def should_send_daily_summary(self):
+        """Check if we should send a daily summary"""
+        now = datetime.now(timezone.utc)
+        if self.last_summary_date is None or self.last_summary_date.date() < now.date():
+            self.last_summary_date = now
+            return True
+        return False
+
     def send_daily_summary(self, current_data):
         """Send daily summary email"""
         try:
+            if not self.should_send_daily_summary():
+                return False
+
             subject = f"Daily Market Dashboard Summary - {datetime.now().strftime('%Y-%m-%d')}"
             message = self.format_daily_summary(current_data)
             return self.send_email_alert(subject, message)
@@ -119,7 +133,7 @@ US Treasury Yields
 
     def check_and_notify(self, current_data, previous_data):
         """Check for significant changes and send notifications"""
-        # Send daily summary first
+        # Send daily summary only once per day
         self.send_daily_summary(current_data)
 
         # Then check for threshold alerts
