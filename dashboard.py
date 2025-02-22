@@ -14,6 +14,7 @@ import pathlib
 import sys
 import traceback
 from notification_manager import NotificationManager
+from decimal import Decimal
 
 # Configure logging
 logging.basicConfig(
@@ -66,6 +67,11 @@ def get_historical_data():
 
         if results:
             logger.info(f"Successfully fetched {len(results)} records")
+            # Convert Decimal to float for numeric fields
+            for result in results:
+                for key, value in result.items():
+                    if isinstance(value, (Decimal, float)):
+                        result[key] = float(value)
             return pd.DataFrame(results)
         logger.warning("No historical data found")
         return None
@@ -93,8 +99,8 @@ try:
             return 0.0
         if field not in previous or field not in current:
             return 0.0
-        prev_value = previous[field]
-        curr_value = current[field]
+        prev_value = float(previous[field]) if previous[field] is not None else None
+        curr_value = float(current[field]) if current[field] is not None else None
         if prev_value and curr_value and prev_value != 0:
             return ((curr_value - prev_value) / prev_value) * 100
         return 0.0
