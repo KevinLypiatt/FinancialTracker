@@ -41,6 +41,15 @@ st.markdown("""
         border-radius: 5px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
+    [data-testid="stMetricDelta"] div[style*="color: rgb(255, 43, 43)"] {
+        color: red !important;
+    }
+    .metric-box {
+        background-color: white;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 5px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -178,6 +187,54 @@ def main():
             f"${current_data['bitcoin']:,.2f}",
             format_percentage(calculate_change(current_data, previous_data, 'bitcoin')),
             delta_color=get_delta_color(calculate_change(current_data, previous_data, 'bitcoin'))
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Create two columns for UK and US Rates
+    st.subheader("Economic Indicators")
+    uk_col, us_col = st.columns(2)
+
+    # UK Rates
+    with uk_col:
+        st.markdown("<div class='data-card'>", unsafe_allow_html=True)
+        st.markdown("### UK Rates")
+
+        # UK Base Rate
+        st.metric(
+            "Base Rate",
+            f"{current_data['uk_base_rate']:.2f}%" if current_data['uk_base_rate'] else "N/A",
+            format_percentage(calculate_change(current_data, previous_data, 'uk_base_rate')),
+            delta_color=get_delta_color(calculate_change(current_data, previous_data, 'uk_base_rate'))
+        )
+
+        # UK Inflation
+        st.metric(
+            "Inflation Rate",
+            f"{current_data['uk_inflation']:.2f}%" if current_data['uk_inflation'] else "N/A",
+            format_percentage(calculate_change(current_data, previous_data, 'uk_inflation')),
+            delta_color=get_delta_color(calculate_change(current_data, previous_data, 'uk_inflation'))
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # US Rates
+    with us_col:
+        st.markdown("<div class='data-card'>", unsafe_allow_html=True)
+        st.markdown("### US Rates")
+
+        # US Base Rate
+        st.metric(
+            "Federal Funds Rate",
+            f"{current_data['us_base_rate']:.2f}%" if current_data['us_base_rate'] else "N/A",
+            format_percentage(calculate_change(current_data, previous_data, 'us_base_rate')),
+            delta_color=get_delta_color(calculate_change(current_data, previous_data, 'us_base_rate'))
+        )
+
+        # US Inflation
+        st.metric(
+            "Inflation Rate",
+            f"{current_data['us_inflation']:.2f}%" if current_data['us_inflation'] else "N/A",
+            format_percentage(calculate_change(current_data, previous_data, 'us_inflation')),
+            delta_color=get_delta_color(calculate_change(current_data, previous_data, 'us_inflation'))
         )
         st.markdown("</div>", unsafe_allow_html=True)
 

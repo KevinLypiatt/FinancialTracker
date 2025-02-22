@@ -15,9 +15,11 @@ class NotificationManager:
             'bitcoin': 2.0,     # 2% change
             'sp500': 1.0,       # 1% change
             'gbp_usd': 0.5,     # 0.5% change
-            'us_10y_yield': 0.1 # 0.1 percentage point change
+            'us_10y_yield': 0.1,# 0.1 percentage point change
+            'uk_inflation': 0.2,# 0.2 percentage point change
+            'us_inflation': 0.2 # 0.2 percentage point change
         }
-        
+
         # Email configuration
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 587
@@ -63,8 +65,51 @@ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
             logger.error(f"Failed to send email alert: {str(e)}")
             return False
 
+    def format_daily_summary(self, current_data):
+        """Format the daily summary email"""
+        summary = f"""
+Daily Market Dashboard Summary
+Date: {datetime.now().strftime('%Y-%m-%d')}
+
+Gold
+USD: ${current_data.get('gold_usd', 'N/A'):,.2f}
+GBP: £{current_data.get('gold_gbp', 'N/A'):,.2f}
+
+Currency
+GBP/USD: {current_data.get('gbp_usd', 'N/A'):.4f}
+
+Indices
+S&P 500: {current_data.get('sp500', 'N/A'):,.2f}
+Bitcoin: ${current_data.get('bitcoin', 'N/A'):,.2f}
+
+UK Rates
+Base Rate: {current_data.get('uk_base_rate', 'N/A'):.2f}%
+Inflation: {current_data.get('uk_inflation', 'N/A'):.2f}%
+
+US Rates
+Federal Funds Rate: {current_data.get('us_base_rate', 'N/A'):.2f}%
+Inflation: {current_data.get('us_inflation', 'N/A'):.2f}%
+
+US Treasury Yields
+2Y: {current_data.get('us_2y_yield', 'N/A'):.2f}%
+5Y: {current_data.get('us_5y_yield', 'N/A'):.2f}%
+10Y: {current_data.get('us_10y_yield', 'N/A'):.2f}%
+30Y: {current_data.get('us_30y_yield', 'N/A'):.2f}%
+"""
+        return summary
+
+    def send_daily_summary(self, current_data):
+        """Send daily summary email"""
+        subject = f"Daily Market Dashboard Summary - {datetime.now().strftime('%Y-%m-%d')}"
+        message = self.format_daily_summary(current_data)
+        self.send_email_alert(subject, message)
+
     def check_and_notify(self, current_data, previous_data):
         """Check for significant changes and send notifications"""
+        # Send daily summary first
+        self.send_daily_summary(current_data)
+
+        # Then check for threshold alerts
         if not previous_data or not current_data:
             return
 

@@ -47,19 +47,54 @@ class MarketDataFetcher:
             self.logger.error(f"Error fetching stock data for {symbol}: {str(e)}")
             return None
 
+    def get_uk_rates(self) -> Dict[str, Optional[float]]:
+        """Get UK base rate and inflation rate"""
+        try:
+            uk_base = self.get_stock_data("^GBPBOR")
+            uk_inflation = self.get_stock_data("^UKRPI")
+
+            return {
+                "uk_base_rate": uk_base,
+                "uk_inflation": uk_inflation
+            }
+        except Exception as e:
+            self.logger.error(f"Error fetching UK rates: {str(e)}")
+            return {"uk_base_rate": None, "uk_inflation": None}
+
+    def get_us_rates(self) -> Dict[str, Optional[float]]:
+        """Get US federal funds rate and inflation rate"""
+        try:
+            us_base = self.get_stock_data("^IRX")
+            us_inflation = self.get_stock_data("^CPURNSA")
+
+            return {
+                "us_base_rate": us_base,
+                "us_inflation": us_inflation
+            }
+        except Exception as e:
+            self.logger.error(f"Error fetching US rates: {str(e)}")
+            return {"us_base_rate": None, "us_inflation": None}
+
     def get_market_data(self) -> Dict[str, Any]:
         try:
-            gold_usd = self.get_stock_data("GC=F")
-            gbp_usd = self.get_forex_rate()
-            return {
+            data = {
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "gold_usd": gold_usd,
-                "gold_gbp": gold_usd / gbp_usd if gold_usd and gbp_usd else None,
-                "gbp_usd": gbp_usd,
+                "gold_usd": self.get_stock_data("GC=F"),
+                "gbp_usd": self.get_forex_rate(),
                 "sp500": self.get_stock_data("^GSPC"),
                 "bitcoin": self.get_stock_data("BTC-USD"),
-                **self.get_us_yield_curve()
             }
+
+            data.update(self.get_us_yield_curve())
+            data.update(self.get_uk_rates())
+            data.update(self.get_us_rates())
+
+            if data["gold_usd"] and data["gbp_usd"]:
+                data["gold_gbp"] = data["gold_usd"] / data["gbp_usd"]
+            else:
+                data["gold_gbp"] = None
+
+            return data
         except Exception as e:
             self.logger.error(f"Error fetching market data: {str(e)}")
             raise
