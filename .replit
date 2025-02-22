@@ -5,37 +5,22 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "scheduled"
-run = ["sh", "-c", "python daily_collector.py"]
+run = ["sh", "-c", "streamlit run dashboard.py --server.port 3000 --server.address 0.0.0.0"]
 
 [workflows]
 runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
+author = "agent"
 mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Streamlit Dashboard"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Daily Collector"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "streamlit run dashboard.py --server.port 5000"
-
-[[workflows.workflow]]
-name = "Streamlit Dashboard"
-author = "agent"
 
 [workflows.workflow.metadata]
 agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
-task = "packager.installForAll"
+task = "workflow.run"
+args = "Dashboard"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
@@ -43,7 +28,7 @@ args = "streamlit run dashboard.py --server.port 5000 --server.address 0.0.0.0"
 waitForPort = 5000
 
 [[workflows.workflow]]
-name = "Daily Collector"
+name = "Dashboard"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -54,7 +39,17 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python daily_collector.py"
+args = "streamlit run dashboard.py --server.port 3000 --server.address 0.0.0.0"
+waitForPort = 3000
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[ports]]
+localPort = 80
+externalPort = 3000
 
 [[ports]]
 localPort = 5000
