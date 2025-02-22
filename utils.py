@@ -1,24 +1,30 @@
+import math
 
 def get_delta_color(change):
     """
     Determines the color for the delta indicator based on the change value.
     Returns:
-    - "normal" for positive changes (green)
-    - "inverse" for negative changes (red)
-    - "off" for no change (gray)
+    - "green" for positive changes
+    - "red" for negative changes
+    - "gray" for no change
     """
-    if abs(change) < 0.0001:  # Handle floating point comparison
-        return "off"  # Gray
-    elif change > 0:
-        return "normal"  # Green
-    return "inverse"  # Red for negative
+    if math.isclose(change, 0, abs_tol=1e-4):  # Handle floating point comparison
+        return "gray"  # Neutral color
+    return "green" if change > 0 else "red"  # Positive = green, Negative = red
 
 def format_percentage(value):
     """
     Formats the percentage change with appropriate sign and decimal places.
     """
-    if abs(value) < 0.0001:  # Handle floating point comparison
+    if math.isclose(value, 0, abs_tol=1e-4):
         return "0.00%"
-    if value > 0:
-        return f"+{value:.2f}%"
-    return f"{value:.2f}%"  # Negative sign is already included
+    return f"{value:+.2f}%"  # `+` ensures explicit sign for positives
+
+# Example usage
+if __name__ == "__main__":
+    test_values = [0.0023, -0.0045, 0.0, -0.00005, 0.01]
+
+    for val in test_values:
+        color = get_delta_color(val)
+        formatted = format_percentage(val * 100)  # Assuming values are in decimal (e.g., 0.01 = 1%)
+        print(f"Change: {val:.5f}, Color: {color}, Formatted: {formatted}")
