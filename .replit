@@ -5,7 +5,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "streamlit run dashboard.py"]
+run = ["sh", "-c", "python test_supabase.py"]
 
 [workflows]
 runButton = "Project"
@@ -17,7 +17,25 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
+args = "test_supabase"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
 args = "Dashboard"
+
+[[workflows.workflow]]
+name = "test_supabase"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python test_supabase.py"
 
 [[workflows.workflow]]
 name = "Dashboard"
@@ -32,7 +50,7 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "streamlit run dashboard.py"
-waitForPort = 8501
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000

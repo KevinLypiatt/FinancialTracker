@@ -1,11 +1,10 @@
 import os
 from datetime import datetime, timezone
-from dotenv import load_dotenv
 from market_data import MarketDataFetcher
 from supabase import create_client, Client
 from typing import Optional
 import logging
-import pathlib
+import sys
 
 # Configure logging
 logging.basicConfig(
@@ -14,16 +13,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-env_path = pathlib.Path(__file__).parent / '.env'
-load_dotenv(dotenv_path=env_path)
-
 def init_supabase() -> Optional[Client]:
     """Initialize Supabase client with proper error handling"""
     try:
         logger.info("Attempting to connect to Supabase...")
-        supabase_url = os.getenv('SUPABASE_URL')
-        supabase_key = os.getenv('SUPABASE_KEY')
+        supabase_url = os.environ.get('SUPABASE_URL')
+        supabase_key = os.environ.get('SUPABASE_KEY')
 
         if not supabase_url or not supabase_key:
             logger.error("Supabase credentials not found in environment")
