@@ -48,14 +48,17 @@ class MarketDataFetcher:
             return None
 
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
-        """Get UK base rate and inflation rate using fixed values"""
+        """Get UK base rate and inflation rate using market data"""
         try:
-            # Using fixed values for UK rates
+            # Using UK gilt yields and RPI for live data
+            uk_base = self.get_stock_data("^GBVX")
+            uk_inflation = self.get_stock_data("^RPI.L")
+
             rates = {
-                "uk_base_rate": 4.5,  # Current Bank of England base rate
-                "uk_inflation": 3.0   # Current UK CPI
+                "uk_base_rate": uk_base if uk_base is not None else 4.5,  # Fallback to current rate
+                "uk_inflation": uk_inflation if uk_inflation is not None else 3.0  # Fallback to current rate
             }
-            self.logger.info(f"UK rates: {rates}")  # Add logging to debug
+            self.logger.info(f"UK rates: {rates}")
             return rates
         except Exception as e:
             self.logger.error(f"Error fetching UK rates: {str(e)}")

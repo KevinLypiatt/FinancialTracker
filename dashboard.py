@@ -42,10 +42,10 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     [data-testid="stMetricDelta"] > div {
-        color: rgb(9, 171, 59);
+        color: black !important;
     }
     [data-testid="stMetricDelta"][data-direction="down"] > div {
-        color: rgb(255, 43, 43) !important;
+        color: black !important;
     }
     .metric-box {
         background-color: white;
