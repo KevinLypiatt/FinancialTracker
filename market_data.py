@@ -7,6 +7,7 @@ from threading import Lock
 from dataclasses import dataclass
 from fredapi import Fred
 import os
+import requests
 
 @dataclass
 class RateLimiter:
@@ -26,8 +27,9 @@ class MarketDataFetcher:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.rate_limiter = RateLimiter(calls_per_second=2)
-        # Initialize FRED API client
         self.fred = Fred(api_key=os.environ.get('FRED_API_KEY'))
+        self.ninjas_api_key = os.environ.get('API_NINJAS_KEY')
+        self.ninjas_headers = {'X-Api-Key': self.ninjas_api_key}
 
     def get_forex_rate(self, symbol: str = "GBPUSD=X") -> Optional[float]:
         return self.get_stock_data(symbol)
@@ -51,42 +53,45 @@ class MarketDataFetcher:
             self.logger.error(f"Error fetching stock data for {symbol}: {str(e)}")
             return None
 
-    def get_trading_economics_data(self, country: str, indicator: str) -> Optional[float]:
-        """This method is deprecated and will be removed"""
-        self.logger.warning("Trading Economics API is no longer used")
-        return None
-
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
-        """Get UK base rate and inflation rate using FRED API"""
+        """Get UK base rate and inflation rate using API Ninjas"""
         try:
-            # Get Bank of England Official Bank Rate from FRED
-            # Using a longer timeframe to ensure we have data
-            uk_base = self.fred.get_series('IUDSOIA', 
-                                       observation_start=datetime.now() - timedelta(days=60))
-            if uk_base.empty:
-                raise ValueError("No UK base rate data available")
-            latest_rate = float(uk_base.iloc[-1])
+            # Get UK economic indicators from API Ninjas
+            url = 'https://api.api-ninjas.com/v1/inflation?country=uk'  # Changed to 'uk' instead of 'United Kingdom'
+            self.logger.info(f"Fetching UK inflation data from API Ninjas")
+            response = requests.get(url, headers=self.ninjas_headers)
+            response.raise_for_status()
+            uk_data = response.json()
 
-            # Get UK CPI data for inflation calculation
-            uk_cpi = self.fred.get_series('GBRCPIALLMINMEI', 
-                                      observation_start=datetime.now() - timedelta(days=400))
-            if uk_cpi.empty:
-                raise ValueError("No UK CPI data available")
-            latest_cpi = float(uk_cpi.iloc[-1])
-            # Get year-ago value, handle case where we might not have exactly 13 months
-            year_ago_index = -13 if len(uk_cpi) >= 13 else 0
-            year_ago_cpi = float(uk_cpi.iloc[year_ago_index])
-            inflation_rate = ((latest_cpi - year_ago_cpi) / year_ago_cpi) * 100
+            # Get the most recent inflation rate
+            if not uk_data:
+                raise ValueError("No UK inflation data available")
+
+            inflation_rate = uk_data[0].get('yearly_rate_pct')
+            self.logger.info(f"Retrieved UK inflation rate: {inflation_rate}")
+
+            # Get UK base rate
+            url = 'https://api.api-ninjas.com/v1/interestrate?country=uk'  # Changed to 'uk'
+            self.logger.info(f"Fetching UK base rate data from API Ninjas")
+            response = requests.get(url, headers=self.ninjas_headers)
+            response.raise_for_status()
+            base_rate_data = response.json()
+
+            if not base_rate_data:
+                raise ValueError("No UK base rate data available")
+
+            base_rate = base_rate_data[0].get('central_bank_rates', {}).get('current_rate')
+            self.logger.info(f"Retrieved UK base rate: {base_rate}")
 
             rates = {
-                "uk_base_rate": latest_rate,
+                "uk_base_rate": base_rate,
                 "uk_inflation": inflation_rate
             }
-            self.logger.info(f"UK rates from FRED: {rates}")
+            self.logger.info(f"UK rates from API Ninjas: {rates}")
             return rates
         except Exception as e:
-            self.logger.error(f"Error fetching UK rates: {str(e)}")
-            # Fallback to Yahoo Finance data
+            self.logger.error(f"Error fetching UK rates from API Ninjas: {str(e)}")
+            # Fallback to Yahoo Finance data if API Ninjas fails
             try:
                 uk_base = self.get_stock_data("^GB2YR")  # UK 2Y Gilt yield as proxy
                 uk_gilt = self.get_stock_data("^GB10YR")  # UK 10Y Gilt yield
@@ -100,6 +105,11 @@ class MarketDataFetcher:
             except Exception as fallback_error:
                 self.logger.error(f"Error fetching UK rates fallback: {str(fallback_error)}")
                 return {"uk_base_rate": None, "uk_inflation": None}
+
+    def get_trading_economics_data(self, country: str, indicator: str) -> Optional[float]:
+        """This method is deprecated and will be removed"""
+        self.logger.warning("Trading Economics API is no longer used")
+        return None
 
     def get_us_rates(self) -> Dict[str, Optional[float]]:
         """Get US federal funds rate and inflation rate using FRED API"""
