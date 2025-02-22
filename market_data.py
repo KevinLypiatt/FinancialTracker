@@ -50,13 +50,12 @@ class MarketDataFetcher:
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
         """Get UK base rate and inflation rate using market data"""
         try:
-            # Using UK gilt yields and RPI for live data
             uk_base = self.get_stock_data("^GBVX")
             uk_inflation = self.get_stock_data("^RPI.L")
 
             rates = {
-                "uk_base_rate": uk_base if uk_base is not None else 4.5,  # Fallback to current rate
-                "uk_inflation": uk_inflation if uk_inflation is not None else 3.0  # Fallback to current rate
+                "uk_base_rate": uk_base,
+                "uk_inflation": uk_inflation
             }
             self.logger.info(f"UK rates: {rates}")
             return rates
@@ -67,9 +66,12 @@ class MarketDataFetcher:
     def get_us_rates(self) -> Dict[str, Optional[float]]:
         """Get US federal funds rate and inflation rate"""
         try:
+            us_base = self.get_stock_data("^IRX")
+            us_inflation = self.get_stock_data("^CPIX")
+
             rates = {
-                "us_base_rate": 4.375,  # Average of 4.25-4.5% range
-                "us_inflation": 3.0     # Current US CPI
+                "us_base_rate": us_base,
+                "us_inflation": us_inflation
             }
             self.logger.info(f"US rates: {rates}")  # Add logging to debug
             return rates
