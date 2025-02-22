@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from fredapi import Fred
 import os
 import requests
+from bs4 import BeautifulSoup
 
 @dataclass
 class RateLimiter:
@@ -54,74 +55,82 @@ class MarketDataFetcher:
             return None
 
     def get_uk_rates(self) -> Dict[str, Optional[float]]:
-        """Get UK base rate and inflation rate using API Ninjas"""
+        """Get UK base rate and inflation rate"""
+        # Initialize default return structure
+        rates = {
+            "uk_base_rate": None,
+            "uk_inflation": None
+        }
+
         try:
-            # Get UK economic indicators from API Ninjas
-            url = 'https://api.api-ninjas.com/v1/inflation?country=uk'  # Changed to 'uk' instead of 'United Kingdom'
-            self.logger.info(f"Fetching UK inflation data from API Ninjas")
-            response = requests.get(url, headers=self.ninjas_headers)
-            response.raise_for_status()
-            uk_data = response.json()
-
-            # Get the most recent inflation rate
-            if not uk_data:
-                raise ValueError("No UK inflation data available")
-
-            inflation_rate = uk_data[0].get('yearly_rate_pct')
-            self.logger.info(f"Retrieved UK inflation rate: {inflation_rate}")
-
-            # Get UK base rate
-            url = 'https://api.api-ninjas.com/v1/interestrate?country=uk'  # Changed to 'uk'
-            self.logger.info(f"Fetching UK base rate data from API Ninjas")
-            response = requests.get(url, headers=self.ninjas_headers)
-            response.raise_for_status()
-            base_rate_data = response.json()
-
-            if not base_rate_data:
-                raise ValueError("No UK base rate data available")
-
-            base_rate = base_rate_data[0].get('central_bank_rates', {}).get('current_rate')
-            self.logger.info(f"Retrieved UK base rate: {base_rate}")
-
-            rates = {
-                "uk_base_rate": base_rate,
-                "uk_inflation": inflation_rate
+            # Get UK inflation from ONS website
+            url = "https://nwp-prototype.ons.gov.uk/economy/inflation-and-price-indices/"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
-            self.logger.info(f"UK rates from API Ninjas: {rates}")
+
+            self.logger.info("Fetching UK inflation data from ONS")
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Find the specific div with CPI information
+            cpi_div = soup.find('div', class_='featured-chart__item-description')
+            if cpi_div:
+                text = cpi_div.text.strip()
+                # Extract CPI (not CPIH) figure
+                cpi_part = text.split('CPI')[1]
+                rates["uk_inflation"] = float(cpi_part.split('rose by')[1].split('%')[0].strip())
+                self.logger.info(f"Retrieved UK inflation rate: {rates['uk_inflation']}%")
+
+            # Get UK Bank Rate from Bank of England website
+            url = "https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp"
+
+            # Create a session to handle cookies
+            session = requests.Session()
+            cookies = {
+                'cookie_consent': 'accepted',
+                'cookie_consent_essential': 'accepted',
+                'cookie_consent_analytics': 'accepted'
+            }
+
+            # Make request with cookies
+            response = session.get(url, headers=headers, cookies=cookies)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Find the table with the rates
+            table = soup.find('table')
+            if table:
+                # Get the first row (most recent rate)
+                rows = table.find_all('tr')
+                if len(rows) > 1:  # Ensure we have at least one data row
+                    latest_row = rows[1]  # Skip header row
+                    cells = latest_row.find_all('td')
+                    if len(cells) > 1:  # Ensure we have the rate cell
+                        rates["uk_base_rate"] = float(cells[1].text.strip().replace('%', ''))
+                        self.logger.info(f"Retrieved UK base rate: {rates['uk_base_rate']}%")
+
+            self.logger.info(f"UK rates: {rates}")
             return rates
+
         except Exception as e:
-            self.logger.error(f"Error fetching UK rates from API Ninjas: {str(e)}")
-            # Fallback to Yahoo Finance data if API Ninjas fails
-            try:
-                uk_base = self.get_stock_data("^GB2YR")  # UK 2Y Gilt yield as proxy
-                uk_gilt = self.get_stock_data("^GB10YR")  # UK 10Y Gilt yield
-
-                rates = {
-                    "uk_base_rate": uk_base,
-                    "uk_inflation": uk_gilt
-                }
-                self.logger.info(f"UK rates from Yahoo Finance (fallback): {rates}")
-                return rates
-            except Exception as fallback_error:
-                self.logger.error(f"Error fetching UK rates fallback: {str(fallback_error)}")
-                return {"uk_base_rate": None, "uk_inflation": None}
-
-    def get_trading_economics_data(self, country: str, indicator: str) -> Optional[float]:
-        """This method is deprecated and will be removed"""
-        self.logger.warning("Trading Economics API is no longer used")
-        return None
+            self.logger.error(f"Error fetching UK rates: {str(e)}")
+            return rates  # Return the initialized dictionary with None values
 
     def get_us_rates(self) -> Dict[str, Optional[float]]:
         """Get US federal funds rate and inflation rate using FRED API"""
         try:
             # Get latest Federal Funds Rate
             fed_rate = self.fred.get_series('FEDFUNDS', 
-                                          observation_start=datetime.now() - timedelta(days=30))
+                                             observation_start=datetime.now() - timedelta(days=30))
             latest_rate = float(fed_rate.iloc[-1])
 
             # Get CPI data for last 13 months to calculate YoY inflation
             cpi = self.fred.get_series('CPIAUCSL', 
-                                     observation_start=datetime.now() - timedelta(days=400))
+                                        observation_start=datetime.now() - timedelta(days=400))
             latest_cpi = float(cpi.iloc[-1])
             year_ago_cpi = float(cpi.iloc[-13])  # 13 months ago
             inflation_rate = ((latest_cpi - year_ago_cpi) / year_ago_cpi) * 100
