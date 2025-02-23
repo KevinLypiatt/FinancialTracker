@@ -119,19 +119,27 @@ US Treasury Yields
         """Check if we should send a daily summary"""
         now = datetime.now(timezone.utc)
         target_hour = 9  # 9:00 AM UTC
+        window_minutes = 15  # Increased window to 15 minutes
 
-        # Check if it's a new day AND it's 9:00 AM (allowing for a 5-minute window)
+        # Check if it's a new day AND it's within the target time window
         is_new_day = self.last_summary_date is None or self.last_summary_date.date() < now.date()
-        is_target_time = now.hour == target_hour and now.minute < 5
+        is_target_time = now.hour == target_hour and now.minute < window_minutes
 
-        logger.info(f"Checking daily summary conditions at {now}")
+        logger.info(f"Daily summary check at {now} UTC")
         logger.info(f"Last summary date: {self.last_summary_date}")
         logger.info(f"Is new day: {is_new_day}, Is target time: {is_target_time}")
+        logger.info(f"Current hour (UTC): {now.hour}")
 
         if is_new_day and is_target_time:
             self.last_summary_date = now
-            logger.info(f"Scheduling daily summary for {now}")
+            logger.info(f"Daily summary scheduled for {now}")
             return True
+
+        if not is_target_time:
+            logger.info(f"Not target time. Current: {now.hour}:{now.minute}, Target: {target_hour}:00-{target_hour}:{window_minutes}")
+        if not is_new_day:
+            logger.info("Already sent summary today")
+
         return False
 
     def send_daily_summary(self, current_data):
@@ -139,6 +147,10 @@ US Treasury Yields
         try:
             if not self.should_send_daily_summary():
                 logger.debug("Not time for daily summary yet")
+                return False
+
+            if not all([self.sender_email, self.sender_password, self.recipient_email]):
+                logger.error("Missing email configuration")
                 return False
 
             logger.info("Preparing daily summary email...")
